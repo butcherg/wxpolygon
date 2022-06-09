@@ -73,7 +73,8 @@ edit, and delete properties.  Here are the properties wxpolygon recognizes:
 - **precision**: Sets the display/export precision of floating point numbers.  Default: 3
 - **polyround**: 0|1, sets the use of the third component in the polygon points, for use by the RoundAnything library.  Default: 0 (only x and y)
 - **filepath**: Sets the default path when the program is started.  Default: current working directory
-- **fileformat**: Sets the format of the saved file contents.  Default: "pts = [ %s ];".  Must contain a %s for the place to put the points.  If "pts" is replaced with "filename", the polygon point array will be named the same as the filename, minus the extension.
+ - **fileformat**: Sets the format of the saved file contents.  Default: "filename = [ %s ];".  Must contain a %s for the place to put the points. "filename" tells wxpolygon to use the filename minus the extension for the name of the polygon point array; any other value will be used literally as the array name.
+
 
 ## Resources:
 
