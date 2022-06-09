@@ -1,0 +1,88 @@
+CXX=@CXX@
+LD=@CXX@
+
+ifndef VERSION
+	VERSION=1.0
+endif
+
+SYS := $(shell $(CXX) -dumpmachine)
+
+OBJECTS :=  wxpolygon.o myConfig.o strutil.o myPropertyDialog.o
+
+ifneq (,$(findstring mingw,$(SYS)))
+ OBJECTS += wxpolygonrc.o
+endif
+
+LIBS=@LIBS@
+CXXFLAGS=@CXXFLAGS@
+CPPFLAGS=@CPPFLAGS@
+LDFLAGS=@LDFLAGS@
+
+WX_CPPFLAGS=@WX_CPPFLAGS@
+WX_CXXFLAGS_ONLY=@WX_CXXFLAGS_ONLY@
+WX_CFLAGS_ONLY=@WX_CFLAGS_ONLY@
+WX_LIBS=@WX_LIBS@
+WX_RESCOMP=@WX_RESCOMP@
+
+srcdir=@srcdir@
+VPATH=@srcdir@
+EXT=@EXEEXT@
+
+BUILDDATE=-DBUILDDATE='"$(shell date)"'
+VERSIONSTR=-DVERSION='"$(VERSION)"'
+
+
+all: wxpolygon
+
+wxpolygon:  $(OBJECTS) 
+	$(CXX) $(LDFLAGS) -o wxpolygon$(EXT) $(OBJECTS) $(WX_LIBS) $(LIBS) 
+	cp $(srcdir)/wxpolygon.conf .
+
+ifneq (,$(findstring mingw,$(SYS)))
+wxpolygonrc.o: $(srcdir)/wxpolygon.rc
+	$(WX_RESCOMP) $(srcdir)/wxpolygon.rc  -o$@
+endif
+
+wxpolygon.o: $(srcdir)/wxpolygon.cpp
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(WX_CPPFLAGS) -c $(srcdir)/wxpolygon.cpp  -o$@
+	
+myConfig.o: $(srcdir)/myConfig.cpp
+	$(CXX)  $(CXXFLAGS) $(CPPFLAGS) -o myConfig.o -c $(srcdir)/myConfig.cpp 
+	
+myPropertyDialog.o: $(srcdir)/myPropertyDialog.cpp
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(WX_CPPFLAGS) -o myPropertyDialog.o -c $(srcdir)/myPropertyDialog.cpp 
+
+strutil.o: $(srcdir)/strutil.cpp
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -o strutil.o -c $(srcdir)/strutil.cpp 
+
+
+.PHONY: cleanall
+cleanall: clean 
+
+.PHONY: clean
+clean:
+	rm -f *.o wxpolygon*$(EXT)
+
+.PHONY: zip
+zip:
+ifdef VERSION
+	zip "wxpolygon-$(VERSION).zip" wxpolygon$(EXT) wxpolygon.conf
+else
+	zip "wxpolygon.zip" wxpolygon$(EXT) wxpolygon.conf
+endif
+
+.PHONY: wininstaller-wine
+wininstaller-wine:
+	cp $(srcdir)/wxpolygon.iss .
+	$(srcdir)/inno.sh wxpolygon-$(VERSION) ./wxpolygon.iss
+
+.PHONY: wininstaller-msys2
+wininstaller-msys2:
+#	cp $(srcdir)/readme.txt .
+	cp $(srcdir)/wxpolygon.iss .
+	"/c/Program Files (x86)/Inno Setup 6/ISCC" ./wxpolygon.iss
+
+.PHONY: appimage
+appimage:
+	echo "The icon is at $(srcdir)/wxpolygon.xpm"
+	$(srcdir)/make-appimage.pl $(VERSION) BIN:wxpolygon "BIN:$(srcdir)/wxpolygon.xpm"
