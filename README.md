@@ -34,6 +34,8 @@ You can delete the selected point with the DEL button.  Pressing the 'n' button 
 Right-clicking on a point will bring up an edit dialog with all three values available for changing.  This is where you'd put in radii
 for Round-Anything's polyRound() module.
 
+The mouse wheel can be used to zoom in or out of the polygon view.  Before starting a polygon, you want to make sure the window scale will support the polygon's dimensions; use the mouse wheel to change the scale accordingly.  Also, if you open a polygon file or paste a point set and you can't see the polygon, zoom out with the mousewheel until the polygon comes into view.
+
 Note that wxpolygon always displays a closed polygon, closed with a line segment between the last point in the list and the first point.
 
 The point table grows as you add points.  You can edit any coordinate in the table and the polygon window will update.  When you select a point in the polygon pane, the corresponding entry in the table will select.  Note that three columns are always displayed in the table, x, y, and r.  r is used for clipboard copy and file saving if the polyround property is set to 1; if the property is set to 0, the table still displays r but it isn't used for clipboard copy and file saving.
