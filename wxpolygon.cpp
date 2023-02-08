@@ -28,6 +28,7 @@
 #include <wx/filename.h>
 #include <wx/dnd.h>
 #include <wx/cmdline.h>
+#include <wx/grid.h>
 #include <vector>
 #include <string>
 
@@ -127,11 +128,116 @@ private:
 
 class myFrame;
 
+class pointList: public wxGrid
+{
+public:
+	pointList(wxWindow *parent): wxGrid(parent, wxID_ANY)
+	{
+		CreateGrid( 0, 3 );
+		HideRowLabels();
+		SetColLabelValue (0, "x");
+		SetColLabelValue (1, "y");
+		SetColLabelValue (2, "r");
+		SetColFormatFloat(0, -1, 3);
+		SetColFormatFloat(1, -1, 3);
+		SetColFormatFloat(2, -1, 3);
+	}
+	
+	int size()
+	{
+		return GetNumberRows();
+	}
+	
+	void push_back(pt p)
+	{
+		AppendRows(1);
+		int row = GetNumberRows()-1;
+		SetCellValue(row, 0, wxString::Format("%f",p.x));
+		SetCellValue(row, 1, wxString::Format("%f",p.y));
+		SetCellValue(row, 2, wxString::Format("%f",p.r));	
+	}
+	
+	std::vector<pt> getPoints()
+	{
+		std::vector<pt> points;
+		for (int i=0; i< size(); i++) {
+			pt p;
+			p.x = atof(GetCellValue(i, 0).ToStdString().c_str());
+			p.y = atof(GetCellValue(i, 1).ToStdString().c_str());
+			p.r = atof(GetCellValue(i, 2).ToStdString().c_str());
+			points.push_back(p);
+		}
+		return points;
+	}
+	
+	void setPoints(std::vector<pt> pts)
+	{
+		//ClearGrid();
+		DeleteRows(0,GetNumberRows());
+		for (int i=0; i< pts.size(); i++) {
+			AppendRows(1);
+			int row = GetNumberRows()-1;
+			SetCellValue(row, 0, wxString::Format("%f",pts[i].x));
+			SetCellValue(row, 1, wxString::Format("%f",pts[i].y));
+			SetCellValue(row, 2, wxString::Format("%f",pts[i].r));	
+		}
+	}
+	
+	void insert(int row, pt p)
+	{
+		InsertRows(row);
+		SetCellValue(row, 0, wxString::Format("%f",p.x));
+		SetCellValue(row, 1, wxString::Format("%f",p.y));
+		SetCellValue(row, 2, wxString::Format("%f",p.r));	
+	}
+	
+	void change(int row, float x, float y)
+	{
+		SetCellValue(row, 0, wxString::Format("%f", x));
+		SetCellValue(row, 1, wxString::Format("%f", y));
+	}
+	
+	bool erase(int pt)
+	{
+		return DeleteRows(pt);
+	}
+	
+	void select(int pt)
+	{
+		SelectRow(pt);
+		SetGridCursor(pt,0);
+	}
+	
+	pt operator[](int index) const
+	{
+		pt p;
+		p.x = atof(GetCellValue(index, 0).ToStdString().c_str());
+		p.y = atof(GetCellValue(index, 1).ToStdString().c_str());
+		p.r = atof(GetCellValue(index, 2).ToStdString().c_str());
+		return p;
+	} 
+	
+	pt at(int index)
+	{
+		pt p;
+		p.x = atof(GetCellValue(index, 0).ToStdString().c_str());
+		p.y = atof(GetCellValue(index, 1).ToStdString().c_str());
+		p.r = atof(GetCellValue(index, 2).ToStdString().c_str());
+		return p;
+	}
+	
+	
+private:
+	
+	
+};
+
 class myPolyPane: public wxPanel
 {
 public:
-	myPolyPane(wxWindow *parent): wxPanel(parent, wxID_ANY)
+	myPolyPane(wxWindow *parent, pointList *p): wxPanel(parent, wxID_ANY)
 	{
+		ptlist = p;
 		dragging=inserting=false;
 		SetDoubleBuffered(true);
 		//scale = 0.001;
@@ -141,7 +247,9 @@ public:
 		circleradius = 5;
 		displayscale = 1.0;
 		pos.x = -1; pos.y = -1;
-		pts.push_back(pt{0,0});
+		//pts.push_back(pt{0,0});  //todo: remove
+		ptlist->push_back(pt{0,0});
+		ptlist->select(0);
 		
 		//prop - **scale**: Sets the default scale when the program is open. Default: 0.001
 		scale = atof(myConfig::getConfig().getValueOrDefault("scale","0.001").c_str());
@@ -150,19 +258,20 @@ public:
 		Bind(wxEVT_PAINT, &myPolyPane::onPaint, this);
 		
 		Bind(wxEVT_LEFT_DOWN, &myPolyPane::mouseLeftDown, this);
-		Bind(wxEVT_RIGHT_DOWN, &myPolyPane::mouseRightDown, this);
+		//Bind(wxEVT_RIGHT_DOWN, &myPolyPane::mouseRightDown, this);
 		Bind(wxEVT_MOTION, &myPolyPane::mouseMoved, this);
 		Bind(wxEVT_LEFT_UP, &myPolyPane::mouseReleased, this);
 		Bind(wxEVT_LEAVE_WINDOW, &myPolyPane::OnMouseLeave,  this);
 		Bind(wxEVT_MOUSEWHEEL, &myPolyPane::OnMouseWheel,  this);
-		Bind(wxEVT_CHAR_HOOK, &myPolyPane::OnKey,  this);
+		Bind(wxEVT_KEY_DOWN, &myPolyPane::OnKey,  this);
+		ptlist->Bind(wxEVT_GRID_CELL_CHANGED, &myPolyPane::OnGrid, this);
 	}
 	
 	int getNumberOfPoints()
 	{
-		return (int) pts.size();
+		return ptlist->size();
 	}
-	
+
 	float getScale()
 	{
 		return scale;
@@ -182,9 +291,9 @@ public:
 	
 	int pointAt(float x, float y)
 	{
-		for (int i=0; i< pts.size(); i++)
-			if ((pts[i].x/scale-circleradius < x/scale) & (pts[i].x/scale+circleradius > x/scale))
-				if ((pts[i].y/scale-circleradius < y/scale) & (pts[i].y/scale+circleradius > y/scale))
+		for (int i=0; i< ptlist->size(); i++)
+			if ((ptlist->at(i).x/scale-circleradius < x/scale) & (ptlist->at(i).x/scale+circleradius > x/scale))
+				if ((ptlist->at(i).y/scale-circleradius < y/scale) & (ptlist->at(i).y/scale+circleradius > y/scale))
 					return i;
 		return -1;
 	}
@@ -210,8 +319,8 @@ public:
 
 	int insertBefore(pt p)
 	{
-		for(int i=1; i<pts.size(); i++) {
-			if (isBetween(pts[i-1], pts[i], p))
+		for(int i=1; i<ptlist->size(); i++) {
+			if (isBetween(ptlist->at(i-1), ptlist->at(i), p))
 				return i;
 		}
 		return -1;
@@ -242,6 +351,7 @@ public:
 		
 		dc.SetPen(*wxBLACK_PEN);
 		
+		std::vector<pt> pts = ptlist->getPoints();
 		bool first = true;
 		pt prev = pts[0];
 		int cnt = 0;
@@ -319,23 +429,26 @@ public:
 			
 			int i = insertBefore(p);
 			if ( i > -1) {
-				pts.insert(pts.begin()+i, p);
+				//pts.insert(pts.begin()+i, p); //todo: remove
+				ptlist->insert(i, p);
 				selectedpoint = i;
 				inserting =  true;
 				dragging = true;
 				setModified(true);
 			}
 			else {
-				pts.push_back(p);
-				selectedpoint = pts.size()-1;
+				ptlist->push_back(p);
+				selectedpoint = ptlist->size()-1;
 				setModified(true);
 			}
 		}
+		ptlist->select(selectedpoint);
 		constraint = 0;
 			
 		Refresh();
 	}
-	
+
+/*
 	void mouseRightDown(wxMouseEvent& event)
 	{
 		wxPoint p = event.GetPosition();
@@ -357,6 +470,13 @@ public:
 			setModified(true);
 			Refresh();
 		}
+	}
+*/
+	
+	void OnGrid(wxGridEvent &event)
+	{
+		setModified(true);
+		Refresh();
 	}
 	
 	void mouseMoved(wxMouseEvent& event)
@@ -401,8 +521,7 @@ public:
 				else if (constraint == 1)
 					p.x = begin.x;
 			}
-			pts[selectedpoint].x = p.x;
-			pts[selectedpoint].y = p.y;
+			ptlist->change(selectedpoint, p.x, p.y);
 			setModified(true);
 		}
 		
@@ -462,7 +581,7 @@ public:
 			polypoints.push_back(p);
 		}
 		if (polypoints.size() > 0) {
-			pts = polypoints;
+			ptlist->setPoints(polypoints);
 			Refresh();
 		}
 	}
@@ -473,6 +592,8 @@ public:
 		wxString pointstring;
 		bool first = true;
 		wxString prec = wxString::Format("%d",precision);
+		
+		std::vector<pt> pts = ptlist->getPoints();
 		
 		//prop - **polyround**: 0|1, sets the use of the third component in the polygon points, for use by the RoundAnything library.  Default: 0 (only x and y)
 		if (myConfig::getConfig().getValueOrDefault("polyround","0") == "1") {
@@ -509,7 +630,7 @@ public:
 			wxTheClipboard->SetData( new wxTextDataObject(clipboardpoints) );
 			wxTheClipboard->Close();
 		}
-		((wxFrame *) GetParent())->SetStatusText(wxString::Format("copied %d points from clipboard\n",(int) pts.size()));
+		((wxFrame *) GetParent())->SetStatusText(wxString::Format("copied %d points from clipboard\n",(int) ptlist->size()));
 	}
 	
 	void pasteFromClipboard() 
@@ -523,7 +644,7 @@ public:
 				wxTheClipboard->GetData( data );
 				clipboardpoints = data.GetText();
 				setPointString(clipboardpoints);
-				((wxFrame *) GetParent())->SetStatusText(wxString::Format("pasted %d points over existing data.\n",(int) pts.size()));
+				((wxFrame *) GetParent())->SetStatusText(wxString::Format("pasted %d points over existing data.\n",(int) ptlist->size()));
 				Refresh();
 			}
 			wxTheClipboard->Close();
@@ -532,6 +653,7 @@ public:
 		
 	void OnKey(wxKeyEvent& event)
 	{
+		std::vector<pt> pts = ptlist->getPoints();
 		event.Skip();
 		int precision = atoi(myConfig::getConfig().getValueOrDefault("precision","3").c_str());
 		wxChar uc = event.GetUnicodeKey();
@@ -554,15 +676,16 @@ public:
 					//	break;
 					case 127: //delete: selected point
 						if (pts.size() > 1) {
-							pts.erase(pts.begin()+selectedpoint);
+							ptlist->erase(selectedpoint);
 							selectedpoint--;
+							ptlist->select(selectedpoint);
 						}
 						event.Skip();
 						Refresh();
 						break;
 						
 					case 8: //backspace: remove last point
-						if (pts.size() > 0) pts.pop_back();
+						//if (pts.size() > 0) pts.pop_back();
 						event.Skip();
 						Refresh();
 						break;
@@ -628,13 +751,14 @@ private:
 	float scale;
 	int margin;
 	wxPoint pos, begin;
-	std::vector<pt> pts;
+	//std::vector<pt> pts;
 	bool dragging, inserting;
 	int selectedpoint;
 	int constraint;
 	int circleradius;
 	wxString clipboardpoints;
 	bool modified;
+	pointList *ptlist;
 };
 
 
@@ -680,10 +804,13 @@ public:
 
 		SetMenuBar(menuBar);
 		
-		poly = new myPolyPane(this);
+		
+		grid = new pointList( this);
+		poly = new myPolyPane(this, grid);
 
 		wxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
 		sizer->Add(poly, wxSizerFlags(1).Expand());
+		sizer->Add(grid, wxSizerFlags().Expand());
 		SetSizer(sizer);
 
 		CreateStatusBar(2);
@@ -701,6 +828,7 @@ public:
 		//wxInitAllImageHandlers();
 		Bind(wxEVT_PAINT, &MyFrame::OnPaint, this);
 		Bind(wxEVT_CLOSE_WINDOW, &MyFrame::OnClose, this);
+		Bind(wxEVT_KEY_DOWN, &myPolyPane::OnKey, poly);
 
 	}
 	
@@ -713,6 +841,12 @@ public:
 	{
 		wxPaintDC dc(this);
 		//put dc.DrawWhatever() here...
+	}
+	
+	void OnKey(wxKeyEvent& event)
+	{
+		printf("MyFrame::OnKey...\n"); fflush(stdout);
+		event.Skip();
 	}
 	
 	void OpenFile(wxFileName f)
@@ -912,6 +1046,8 @@ private:
 	PropertyDialog *propdiag;
 	wxString configfile;
 	bool modified;
+	
+	pointList* grid; 
 	wxDECLARE_EVENT_TABLE();
 };
 
