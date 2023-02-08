@@ -23,7 +23,7 @@ The install target installs to /usr/local.  Note that it doesn't move wxpolygon.
 
 ## Usage
 
-When you start the program, you're presented with a window that has X and Y axes, and a point at 0,0. When you left-click in the window, 
+When you start the program, you're presented with a window that has X and Y axes, and a point at 0,0.  Also, as of version 1.1, there's a table on the right-hand side for display/editing the polygon points.  When you left-click in the left window, 
 one of three things will happen:
 
 1. If you click in an empty part of the window, a point is added to the polygon, between the last point in the list and the 0,0 point.
@@ -35,6 +35,8 @@ Right-clicking on a point will bring up an edit dialog with all three values ava
 for Round-Anything's polyRound() module.
 
 Note that wxpolygon always displays a closed polygon, closed with a line segment between the last point in the list and the first point.
+
+The point table grows as you add points.  You can edit any coordinate in the table and the polygon window will update.  When you select a point in the polygon pane, the corresponding entry in the table will select.  Note that three columns are always displayed in the table, x, y, and r.  r is used for clipboard copy and file saving if the polyround property is set to 1; if the property is set to 0, the table still displays r but it isn't used for clipboard copy and file saving.
 
 ## File Opening/Saving
 

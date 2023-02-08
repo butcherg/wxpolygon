@@ -22,8 +22,8 @@ DisableWelcomePage=no
 PrivilegesRequired=admin
 UsedUserAreasWarning=no
 OutputBaseFilename={#MyAppName}-{#MyAppVersion}-w64
-Compression=lzma
-SolidCompression=yes
+;Compression=lzma
+;SolidCompression=yes
 OutputDir=.
 VersionInfoDescription=A simple wxpolygon program.
 VersionInfoCopyright=Copyright (C) 2021-2023 Glenn Butcher.
@@ -32,8 +32,8 @@ ChangesEnvironment=true
 ArchitecturesInstallIn64BitMode=x64
 ;InfoBeforeFile=readme.txt
 
-[Languages]
-Name: "english"; MessagesFile: "compiler:Default.isl"
+;[Languages]
+;Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
