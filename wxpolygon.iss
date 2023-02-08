@@ -1,7 +1,7 @@
 
 
 #define MyAppName "wxpolygon"
-#define MyAppVersion "1.0"
+#define MyAppVersion "1.1"
 #define MyAppPublisher "Glenn Butcher"
 #define MyAppExeName "wxpolygon.exe"
 
@@ -26,7 +26,7 @@ Compression=lzma
 SolidCompression=yes
 OutputDir=.
 VersionInfoDescription=A simple wxpolygon program.
-VersionInfoCopyright=Copyright (C) 2021 Glenn Butcher.
+VersionInfoCopyright=Copyright (C) 2021-2023 Glenn Butcher.
 VersionInfoCompany={#MyAppPublisher}
 ChangesEnvironment=true
 ArchitecturesInstallIn64BitMode=x64
