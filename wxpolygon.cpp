@@ -29,6 +29,7 @@
 #include <wx/dnd.h>
 #include <wx/cmdline.h>
 #include <wx/grid.h>
+#include <wx/aui/aui.h>
 #include <vector>
 #include <string>
 
@@ -205,7 +206,8 @@ public:
 	void select(int pt)
 	{
 		SelectRow(pt);
-		SetGridCursor(pt,0);
+		//SetGridCursor(pt,0);
+		GoToCell(pt,0);
 	}
 	
 	pt operator[](int index) const
@@ -807,11 +809,27 @@ public:
 		
 		grid = new pointList( this);
 		poly = new myPolyPane(this, grid);
+		
+		double pointSize = atof(myConfig::getConfig().getValueOrDefault("fontsize","10").c_str());
+		wxFont font = poly->GetFont();
+		font.SetFractionalPointSize(pointSize);	
+		poly->SetFont(font);
+		font = grid->GetDefaultCellFont();
+		font.SetFractionalPointSize(pointSize);	
+		grid->SetDefaultCellFont(font);
+		grid->SetDefaultRowSize(int (pointSize*1.33*1.5));
+
 
 		wxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
 		sizer->Add(poly, wxSizerFlags(1).Expand());
 		sizer->Add(grid, wxSizerFlags().Expand());
 		SetSizer(sizer);
+		
+		//m_mgr.SetManagedWindow(this);
+		//m_mgr.AddPane(grid,  	wxAuiPaneInfo().Left().CloseButton(false).Name("Points"));
+		//m_mgr.AddPane(poly, wxCENTER);
+		//m_mgr.Update();
+		
 
 		CreateStatusBar(2);
 		//SetStatusText("Welcome to wxPolygon!");
@@ -832,10 +850,11 @@ public:
 
 	}
 	
-	//~MyFrame()
-	//{
-	//	Quit();
-	//}
+	~MyFrame()
+	{
+		m_mgr.UnInit();
+		//Quit();
+	}
 
 	void OnPaint(wxPaintEvent& WXUNUSED(event))
 	{
@@ -1048,6 +1067,7 @@ private:
 	bool modified;
 	
 	pointList* grid; 
+	wxAuiManager m_mgr;
 	wxDECLARE_EVENT_TABLE();
 };
 
