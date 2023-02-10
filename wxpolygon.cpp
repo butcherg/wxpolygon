@@ -441,6 +441,7 @@ public:
 			else {
 				ptlist->push_back(p);
 				selectedpoint = ptlist->size()-1;
+				dragging = true;
 				setModified(true);
 			}
 		}
@@ -553,6 +554,7 @@ public:
 	{
 		std::vector<pt> polypoints;
 		std::string str = s.ToStdString();
+		int maxX = 0, maxY = 0;
 		
 		//basically strips out all between the first '=' and the subsequent ';' 
 		str.erase(std::remove(str.begin(), str.end(), '\r'), str.end());
@@ -580,10 +582,18 @@ public:
 				p.r = atof(pnt[2].c_str());
 			else
 				p.r = 0.0;
+			if (p.x > maxX) maxX = p.x;
+			if (p.y > maxY) maxY = p.y;
 			polypoints.push_back(p);
 		}
 		if (polypoints.size() > 0) {
 			ptlist->setPoints(polypoints);
+			int w = GetSize().GetWidth();
+			int h = GetSize().GetHeight();
+			if (h<w)
+				scale = ((float) maxY / (float) (h-margin)) * 1.05;
+			else
+				scale = ((float) maxX / (float) (w-margin)) * 1.05;
 			Refresh();
 		}
 	}
