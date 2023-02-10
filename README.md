@@ -74,9 +74,9 @@ If a file called wxpolygon.conf is in the same directory as the wxpolygon execut
 are used by the program.  You can change the properties by using the menu, Edit->Properties..., and a dialog is displayed where you can add, 
 edit, and delete properties.  Here are the properties wxpolygon recognizes:
 
-- **scale**: Sets the default scale when the program is open. Default: 0.001
+- **scale**: Sets the default scale when the program is open.  This number is used to scale points to the window, not useful for other meanings of the word. Default: 0.001
 - **precision**: Sets the display/export precision of floating point numbers.  Default: 3
-- **polyround**: 0|1, sets the use of the third component in the polygon points, for use by the RoundAnything library.  Default: 0 (only x and y)
+- **polyround**: 0|1, sets the use of the third component in the polygon points, for use by the RoundAnything library. If =1, clipboard copy and file save contents will have three columns, x, y, and r; if =0, then just x and y. The state of this property is indicated in the status bar.  Default: 0 (only x and y)
 - **filepath**: Sets the default path when the program is started.  Default: current working directory
  - **fileformat**: Sets the format of the saved file contents.  Default: "filename = [ %s ];".  Must contain a %s for the place to put the points. "filename" tells wxpolygon to use the filename minus the extension for the name of the polygon point array; any other value will be used literally as the array name.
 

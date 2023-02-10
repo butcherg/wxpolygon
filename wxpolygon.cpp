@@ -832,7 +832,7 @@ public:
 		//m_mgr.Update();
 		
 
-		CreateStatusBar(2);
+		CreateStatusBar(3);
 		//SetStatusText("Welcome to wxPolygon!");
 		SetStatusText(wxString::Format("scale: %f",poly->getScale()));
 		configfile = "(none)";
@@ -841,6 +841,9 @@ public:
 		
 		//prop - **filepath**: Sets the default path when the program is started.  Default: current working directory
 		file.SetPath(wxString(myConfig::getConfig().getValueOrDefault("filepath","")));
+		
+		if (myConfig::getConfig().getValueOrDefault("polyround","0") == "1") 
+			SetStatusText(_("polyround"),2);
 		
 		SetDropTarget(new myFileDropTarget(this));
 
@@ -971,6 +974,10 @@ public:
 		SetStatusText(wxString::Format(_("Changed %s to %s."), propname, propval));
 		myConfig::getConfig().setValue((const char  *) propname.mb_str(), (const char  *) propval.mb_str());
 		if (!myConfig::getConfig().flush()) SetStatusText(_("Write to configuration file failed."));
+		if (myConfig::getConfig().getValueOrDefault("polyround","0") == "1") 
+			SetStatusText(_("polyround"),2);
+		else
+			SetStatusText(_(""),2);
 
 		poly->Refresh();
 	}
