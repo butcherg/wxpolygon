@@ -343,8 +343,8 @@ public:
 		int w = dc.GetSize().GetWidth();
 		
 		dc.Clear();
-		dc.DrawText("X",margin-15,15);
-		dc.DrawText("Y",w-25,h-(margin-10));
+		dc.DrawText("Y",margin-15,15);
+		dc.DrawText("X",w-25,h-(margin-10));
 		dc.SetUserScale(displayscale, displayscale);
 		
 		dc.SetPen(wxPen(wxColour(128,128,128), 1, wxPENSTYLE_DOT_DASH ));
@@ -810,6 +810,7 @@ public:
 		grid = new pointList( this);
 		poly = new myPolyPane(this, grid);
 		
+		 //prop - **fontsize**: Sets the font size in points. Requires program restart to take effect. Default: 10.0
 		double pointSize = atof(myConfig::getConfig().getValueOrDefault("fontsize","10").c_str());
 		wxFont font = poly->GetFont();
 		font.SetFractionalPointSize(pointSize);	
