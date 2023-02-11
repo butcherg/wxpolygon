@@ -33,6 +33,8 @@
 #include <vector>
 #include <string>
 
+#define MARGIN 80
+
 //struct pt {int x, y; float r;};
 struct pt {float x, y, r;};
 
@@ -245,16 +247,13 @@ public:
 		//scale = 0.001;
 		//precision = 3;
 		constraint = 0; //0: no constraint; 1: constrain mousemove to x; 2: constrain mousemove to y
-		margin = 80;
+		margin = MARGIN;
 		circleradius = 5;
 		displayscale = 1.0;
 		pos.x = -1; pos.y = -1;
 		//pts.push_back(pt{0,0});  //todo: remove
 		ptlist->push_back(pt{0,0});
 		ptlist->select(0);
-		
-		//prop - **scale**: Sets the default scale when the program is open. Default: 0.001
-		scale = atof(myConfig::getConfig().getValueOrDefault("scale","0.001").c_str());
 		
 		Bind(wxEVT_SIZE, &myPolyPane::OnSize, this);
 		Bind(wxEVT_PAINT, &myPolyPane::onPaint, this);
@@ -272,6 +271,11 @@ public:
 	int getNumberOfPoints()
 	{
 		return ptlist->size();
+	}
+	
+	void setScale(float s)
+	{
+		scale = s;
 	}
 
 	float getScale()
@@ -393,7 +397,6 @@ public:
 			scale -= increment;
 		else
 			scale += increment;
-		((wxFrame *) GetParent())->SetStatusText(wxString::Format("scale: %f",scale));
 		Refresh();
 	}
 	
@@ -840,11 +843,8 @@ public:
 		//m_mgr.AddPane(grid,  	wxAuiPaneInfo().Left().CloseButton(false).Name("Points"));
 		//m_mgr.AddPane(poly, wxCENTER);
 		//m_mgr.Update();
-		
 
 		CreateStatusBar(3);
-		//SetStatusText("Welcome to wxPolygon!");
-		SetStatusText(wxString::Format("scale: %f",poly->getScale()));
 		configfile = "(none)";
 		
 		propdiag = NULL;
@@ -861,6 +861,16 @@ public:
 		Bind(wxEVT_PAINT, &MyFrame::OnPaint, this);
 		Bind(wxEVT_CLOSE_WINDOW, &MyFrame::OnClose, this);
 		Bind(wxEVT_KEY_DOWN, &myPolyPane::OnKey, poly);
+		
+		//prop - **maxvalue**: Sets the default maximum value when the program is open.  This is used to scale  Default: 0.001
+		float maxvalue = atof(myConfig::getConfig().getValueOrDefault("maxvalue","10.0").c_str());
+		int w = poly->GetSize().GetWidth();
+		int h = poly->GetSize().GetHeight();
+		if (h<w)
+			poly->setScale(( maxvalue / (float) (h-MARGIN)) * 1.05);
+		else
+			poly->setScale(( maxvalue / (float) (w-MARGIN)) * 1.05);
+		SetStatusText(wxString::Format("maxvalue: %f",maxvalue));
 
 	}
 	
