@@ -36,7 +36,7 @@ all: wxpolygon
 
 wxpolygon:  $(OBJECTS) 
 	$(CXX) $(LDFLAGS) -o wxpolygon$(EXT) $(OBJECTS) $(WX_LIBS) $(LIBS) 
-	cp $(srcdir)/wxpolygon.conf .
+	test ! -f wxpolygon.conf && cp $(srcdir)/wxpolygon.conf . || true
 
 ifneq (,$(findstring mingw,$(SYS)))
 wxpolygonrc.o: $(srcdir)/wxpolygon.rc
