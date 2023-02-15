@@ -12,7 +12,7 @@ wxpolygon uses the wxWidgets GUI library.  I have the autoconf configuration set
 wxWidgets instantiation, and the following instructions make use of it:
 
 ```
-$ autreconf -vfi
+$ autoconf
 $ mkdir build
 $ cd build
 $ ../configure --with-wx-config=/path/to/wx-config
