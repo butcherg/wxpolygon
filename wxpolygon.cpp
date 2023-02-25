@@ -41,6 +41,8 @@ struct pt {float x, y, r;};
 #define POLYROUND
 #define TEXTCTRLHEIGHT 20
 
+const wxString WXPOLYGON_VERSION = "1.2";
+
 wxArrayString split(wxString str, wxString delim)
 {
 	wxArrayString a;
@@ -1050,11 +1052,12 @@ public:
 	{
 		wxMessageBox(wxString::Format
 		(
-			"Welcome to wxPolygon!\n"
+			"wxPolygon %s\n"
 			"\n"
 			"This is a program that draws polygons for\n"
 			"copy/pasting from/to OpenSCAD arrays.\n\n"
 			"%s\n%s.",
+			WXPOLYGON_VERSION.c_str(),
 			wxVERSION_STRING,
 			wxGetOsDescription()
                  ),
