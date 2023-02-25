@@ -422,7 +422,7 @@ public:
 			pos.y = ((pos.y + 50) / 100) *100;
 		}
 		
-		pt p; p.x = (float) pos.x*scale; p.y = (float) pos.y*scale;
+		pt p; p.x = (float) pos.x*scale; p.y = (float) pos.y*scale; p.r = 0.0;
 		begin.x = p.x;
 		begin.y = p.y;
 		int pnt = pointAt(p.x, p.y);
