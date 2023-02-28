@@ -559,7 +559,7 @@ public:
 	{
 		std::vector<pt> polypoints;
 		std::string str = s.ToStdString();
-		int maxX = 0, maxY = 0;
+		float maxX = 0, maxY = 0;
 		
 		//basically strips out all between the first '=' and the subsequent ';' 
 		str.erase(std::remove(str.begin(), str.end(), '\r'), str.end());
@@ -595,10 +595,12 @@ public:
 			ptlist->setPoints(polypoints);
 			int w = GetSize().GetWidth();
 			int h = GetSize().GetHeight();
-			if (h<w)
-				scale = ((float) maxY / (float) (h-margin)) * 1.05;
-			else
-				scale = ((float) maxX / (float) (w-margin)) * 1.05;
+			if (h>w) {
+				scale = (maxY / (float) (h-margin)) * 1.05;
+			}
+			else {
+				scale = (maxX / (float) (w-margin)) * 1.05;
+			}
 			Refresh();
 		}
 	}
