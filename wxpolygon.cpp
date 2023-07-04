@@ -244,8 +244,9 @@ public:
 	myPolyPane(wxWindow *parent, pointList *p): wxPanel(parent, wxID_ANY)
 	{
 		ptlist = p;
-		dragging=inserting=false;
+		dragging=inserting=imgdragging=false;
 		SetDoubleBuffered(true);
+		imgscale = 1.0;
 		//scale = 0.001;
 		//precision = 3;
 		constraint = 0; //0: no constraint; 1: constrain mousemove to x; 2: constrain mousemove to y
@@ -253,6 +254,7 @@ public:
 		circleradius = 5;
 		displayscale = 1.0;
 		pos.x = -1; pos.y = -1;
+		imgx = imgy = 0;
 		//pts.push_back(pt{0,0});  //todo: remove
 		ptlist->push_back(pt{0,0});
 		ptlist->select(0);
@@ -261,9 +263,11 @@ public:
 		Bind(wxEVT_PAINT, &myPolyPane::onPaint, this);
 		
 		Bind(wxEVT_LEFT_DOWN, &myPolyPane::mouseLeftDown, this);
-		//Bind(wxEVT_RIGHT_DOWN, &myPolyPane::mouseRightDown, this);
+		Bind(wxEVT_RIGHT_DOWN, &myPolyPane::mouseRightDown, this);
+		Bind(wxEVT_RIGHT_DCLICK, &myPolyPane::mouseRightDClick, this);
 		Bind(wxEVT_MOTION, &myPolyPane::mouseMoved, this);
 		Bind(wxEVT_LEFT_UP, &myPolyPane::mouseReleased, this);
+		Bind(wxEVT_RIGHT_UP, &myPolyPane::mouseReleased, this);
 		Bind(wxEVT_LEAVE_WINDOW, &myPolyPane::OnMouseLeave,  this);
 		Bind(wxEVT_MOUSEWHEEL, &myPolyPane::OnMouseWheel,  this);
 		Bind(wxEVT_KEY_DOWN, &myPolyPane::OnKey,  this);
@@ -352,6 +356,7 @@ public:
 		dc.DrawText("Y",margin-15,15);
 		dc.DrawText("X",w-25,h-(margin-10));
 		dc.SetUserScale(displayscale, displayscale);
+		dc.DrawBitmap(wxBitmap(img.Scale(imgw*imgscale, imgh*imgscale)), imgx, imgy);
 		
 		dc.SetPen(wxPen(wxColour(128,128,128), 1, wxPENSTYLE_DOT_DASH ));
 		dc.DrawLine(margin,h-margin,w,h-margin); //X axis
@@ -394,6 +399,15 @@ public:
 		double increment = scale/10;
 		//if (event.ShiftDown()) increment = scale*2;
 		//if (event.ControlDown()) increment = scale*5;
+		
+		if (event.AltDown()) {
+			if (event.GetWheelRotation() > 0)
+				imgscale *= 1.1;
+			else
+				imgscale *= 0.9;
+			Refresh();
+			return;
+		}
 
 		if (event.GetWheelRotation() > 0)
 			scale -= increment;
@@ -456,7 +470,7 @@ public:
 		Refresh();
 	}
 
-/*
+
 	void mouseRightDown(wxMouseEvent& event)
 	{
 		wxPoint p = event.GetPosition();
@@ -467,6 +481,12 @@ public:
 		p.x = p.x-m;
 		p.y = h-m-p.y;
 		
+		//if (event.AltDown()) {
+		prevx=pos.x; prevy=pos.y;
+		imgdragging = true;
+		//}
+		
+		/*
 		pt pt; pt.x = (float) pos.x*scale; pt.y = (float) pos.y*scale;
 		
 		int pnt = pointAt(pt.x, pt.y);
@@ -478,8 +498,16 @@ public:
 			setModified(true);
 			Refresh();
 		}
+		*/
 	}
-*/
+	
+	void mouseRightDClick(wxMouseEvent& event)
+	{
+		imgx = imgy = 0;
+		imgscale = 1.0;
+		Refresh();
+	}
+
 	
 	void OnGrid(wxGridEvent &event)
 	{
@@ -498,6 +526,15 @@ public:
 		
 		pos.x = pos.x-m;
 		pos.y = h-m-pos.y;
+		
+		if (imgdragging) {
+			imgx -= prevx - pos.x;
+			imgy += prevy - pos.y;
+			prevx = pos.x;
+			prevy = pos.y;
+			Refresh();
+			return;
+		}
 		
 		if (event.AltDown()) {
 			if (constraint == 0) {
@@ -541,6 +578,7 @@ public:
 	{
 		dragging = false;
 		inserting = false;
+		imgdragging = false;
 		constraint = 0;
 		Refresh();
 	}
@@ -551,6 +589,7 @@ public:
 		pos.y = -1;
 		dragging = false;
 		inserting = false;
+		imgdragging = false;
 		constraint = 0;
 		Refresh();
 	}
@@ -764,6 +803,13 @@ public:
 	{
 		return modified;
 	}
+	
+	void setImage(wxImage image)
+	{
+		img = image;
+		imgw = image.GetWidth();
+		imgh = image.GetHeight();
+	}
 
 private:
 	double displayscale;
@@ -778,6 +824,10 @@ private:
 	wxString clipboardpoints;
 	bool modified;
 	pointList *ptlist;
+	wxImage img;
+	int imgx, imgy, imgw, imgh, prevx, prevy;
+	bool imgdragging;
+	float imgscale;
 };
 
 
@@ -789,6 +839,7 @@ enum {
 	Polygon_Open,
 	Polygon_Save,
 	Polygon_SaveAs,
+	Polygon_LoadImage,
 	Polygon_Properties
 };
 
@@ -804,6 +855,7 @@ public:
 		fileMenu->Append(Polygon_Open, "O&pen\tCtrl-O", "Open a point file");
 		fileMenu->Append(Polygon_Save, "S&ave\tCtrl-S", "Save a point file");
 		fileMenu->Append(Polygon_SaveAs, "Save A&s...\tCtrl-A", "Save a point file");
+		fileMenu->Append(Polygon_LoadImage, "Load I&mage...\tCtrl-L", "Load an image");
 		fileMenu->Append(Polygon_Quit, "Q&uit\tCtrl-Q", "Quit wxpolygon");
 		
 		wxMenu *editMenu = new wxMenu;
@@ -967,6 +1019,15 @@ public:
 		}
 	}
 	
+	void OnLoadImage(wxCommandEvent& WXUNUSED(event))
+	{
+		wxFileName f = wxFileSelector("Specify an image file:", file.GetPath(), "", "", wxFileSelectorDefaultWildcardStr, wxFD_OPEN);
+		if (f.FileExists()) {
+			wxImage img(f.GetFullPath());
+			poly->setImage(img);
+		}
+	}
+	
 	void OnProperties(wxCommandEvent& WXUNUSED(event))
 	{
 		if (configfile == "(none)") {
@@ -1112,6 +1173,7 @@ wxBEGIN_EVENT_TABLE(MyFrame, wxFrame)
     EVT_MENU(Polygon_Open, MyFrame::OnOpen)
     EVT_MENU(Polygon_Save, MyFrame::OnSave)
     EVT_MENU(Polygon_SaveAs, MyFrame::OnSaveAs)
+	EVT_MENU(Polygon_LoadImage, MyFrame::OnLoadImage)
 	EVT_MENU(Polygon_Properties, MyFrame::OnProperties)
 wxEND_EVENT_TABLE()
 
@@ -1143,6 +1205,8 @@ public:
 			wxFileName f(cmdline.GetParam());
 			frame->OpenFile(f);
 		}
+		
+		wxInitAllImageHandlers();
 
 		frame->SetIcon(wxpolygon);
 		frame->Show(true);
