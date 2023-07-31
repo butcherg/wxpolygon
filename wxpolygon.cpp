@@ -356,7 +356,7 @@ public:
 		dc.DrawText("Y",margin-15,15);
 		dc.DrawText("X",w-25,h-(margin-10));
 		dc.SetUserScale(displayscale, displayscale);
-		dc.DrawBitmap(wxBitmap(img.Scale(imgw*imgscale, imgh*imgscale)), imgx, imgy);
+		if (img.IsOk()) dc.DrawBitmap(wxBitmap(img.Scale(imgw*imgscale, imgh*imgscale)), imgx, imgy);
 		
 		dc.SetPen(wxPen(wxColour(128,128,128), 1, wxPENSTYLE_DOT_DASH ));
 		dc.DrawLine(margin,h-margin,w,h-margin); //X axis
