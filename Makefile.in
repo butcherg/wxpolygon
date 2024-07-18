@@ -2,7 +2,7 @@ CXX=@CXX@
 LD=@CXX@
 
 ifndef VERSION
-	VERSION=1.2
+	VERSION=1.2.1
 endif
 
 SYS := $(shell $(CXX) -dumpmachine)

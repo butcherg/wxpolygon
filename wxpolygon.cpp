@@ -41,7 +41,7 @@ struct pt {float x, y, r;};
 #define POLYROUND
 #define TEXTCTRLHEIGHT 20
 
-const wxString WXPOLYGON_VERSION = "1.2";
+const wxString WXPOLYGON_VERSION = "1.2.1";
 
 wxArrayString split(wxString str, wxString delim)
 {
@@ -1189,12 +1189,30 @@ public:
 	bool OnInit()
 	{
 		wxFileName configfile("wxpolygon.conf");
+		
+#ifdef WIN32
 		configfile.SetPath(wxString(getExeDir("")));
 		if (configfile.FileExists()) { 
 			myConfig::loadConfig(configfile.GetFullPath().ToStdString());
 		}
-		else wxMessageBox(wxString::Format("No configuration file: %s",configfile.GetFullPath()));
-		
+		else {
+			wxMessageBox(wxString::Format("No configuration file: %s",configfile.GetFullPath()));
+		}
+#else
+		configfile.SetPath(wxFileName::GetHomeDir()+"/.wxpolygon");
+		if (configfile.FileExists()) { 
+			myConfig::loadConfig(configfile.GetFullPath().ToStdString());
+		}
+		else {
+			configfile.SetPath(wxString(getExeDir("")));
+			if (configfile.FileExists()) { 
+				myConfig::loadConfig(configfile.GetFullPath().ToStdString());
+			}
+			else {
+				wxMessageBox(wxString::Format("No configuration file: %s",configfile.GetFullPath()));
+			}
+		}
+#endif
 		MyFrame *frame = new MyFrame("wxPolygon");
 		if (configfile.FileExists()) frame->setConfigFile(configfile.GetFullPath());
 		

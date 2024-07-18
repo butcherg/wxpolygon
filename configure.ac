@@ -1,5 +1,5 @@
 #AC_PREREQ([2.71])
-AC_INIT([wxpolygon],[1.2])
+AC_INIT([wxpolygon],[1.2.1])
 
 # MINGW_AC_WIN32_NATIVE_HOST
 # --------------------------

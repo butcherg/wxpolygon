@@ -1,7 +1,7 @@
 
 
 #define MyAppName "wxpolygon"
-#define MyAppVersion "1.2"
+#define MyAppVersion "1.2.1"
 #define MyAppPublisher "Glenn Butcher"
 #define MyAppExeName "wxpolygon.exe"
 
